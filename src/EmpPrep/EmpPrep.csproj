@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Cove host contracts (Cove.Sdk + Cove.Core + Cove.Data) are referenced centrally and
+       compile-only by ..\..\Directory.Build.targets. Metadata lives in extension.json (copied
+       centrally by ..\..\Directory.Build.props). Add only genuinely needed PackageReferences here. -->
+
+  <PropertyGroup>
+    <AssemblyName>EmpPrep</AssemblyName>
+    <RootNamespace>EmpPrep</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!--
+    The VTT tile parser and the image-host response reader are internal: they are implementation
+    details of services whose public entry points do I/O, but their parsing rules are exactly what
+    needs direct test coverage.
+  -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>EmpPrep.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>

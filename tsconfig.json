@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@cove/runtime/components": [
+        "../cove/ui/src/components/extension-shared.ts"
+      ],
+      "@cove/runtime/api": ["../cove/ui/src/extensions/extension-api.ts"],
+      "@tanstack/react-query": ["../cove/ui/node_modules/@tanstack/react-query"]
+    }
+  },
+  "include": ["src/EmpPrep/ui/*.tsx", "../cove/ui/src/vite-env.d.ts"]
+}

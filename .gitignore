@@ -1,0 +1,11 @@
+**/bin/*
+**/obj/*
+artifacts/
+*.zip
+node_modules/
+*.user
+.vs/
+.idea/
+.DS_Store
+# src/EmpPrep/dist holds the built UI bundles. They are deliberately checked in: the manifest
+# points the host at them and they ship inside the extension package.

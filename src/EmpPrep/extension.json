@@ -1,0 +1,53 @@
+{
+  "id": "cove.community.empprep",
+  "name": "EMP Prep",
+  "version": "0.1.0",
+  "description": "Prepares library videos for tracker upload: full-resolution screenshots, dotted tags, BBCode description, and a private .torrent hashed from the file in place.",
+  "author": "Cove Community",
+  "url": "https://github.com/yourcove/EmpPrep.Extension",
+  "kind": "extension",
+  "categories": [
+    "tools",
+    "export"
+  ],
+  "minCoveVersion": "1.4.1",
+  "entryDll": "EmpPrep.dll",
+  "jsBundle": "dist/bundle.js",
+  "cssBundle": "dist/bundle.css",
+  "dependencies": {},
+  "externalDependencies": [
+    {
+      "id": "ffmpeg",
+      "name": "FFmpeg",
+      "kind": "tool",
+      "required": true,
+      "description": "Extracts full-resolution screenshot frames. Uses whichever binary Cove is configured with, falling back to PATH.",
+      "executables": [
+        "ffmpeg"
+      ],
+      "configurationKeys": [
+        "FfmpegPath"
+      ],
+      "url": "https://ffmpeg.org/"
+    },
+    {
+      "id": "ffprobe",
+      "name": "FFprobe",
+      "kind": "tool",
+      "required": false,
+      "description": "Optional. Fills in audio channel and sample-rate detail for the media-info block.",
+      "executables": [
+        "ffprobe"
+      ],
+      "configurationKeys": [
+        "FfprobePath"
+      ],
+      "url": "https://ffmpeg.org/"
+    }
+  ],
+  "permissions": {
+    "network": [
+      "hamsterimg.net"
+    ]
+  }
+}

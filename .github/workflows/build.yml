@@ -1,0 +1,113 @@
+name: Build and Release Extension
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    tags:
+      - 'v*'
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '24'
+  EXTENSION_PROJECT: src/EmpPrep/EmpPrep.csproj
+  TEST_PROJECT: tests/EmpPrep.Tests/EmpPrep.Tests.csproj
+  EXTENSION_ID: cove.community.empprep
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "value=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=0.0.0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install UI dependencies
+        run: npm ci
+
+      # The built bundles are checked in, so rebuild them here and fail if they differ: a commit
+      # that changes the TSX without rebuilding would otherwise ship stale UI in the package.
+      - name: Build UI bundles
+        run: npm run build:ui
+
+      - name: Check committed bundles are up to date
+        shell: bash
+        run: |
+          if ! git diff --quiet -- src/EmpPrep/dist; then
+            echo "::error::src/EmpPrep/dist is stale. Run 'npm run build:ui' and commit the result."
+            git diff --stat -- src/EmpPrep/dist
+            exit 1
+          fi
+
+      # CI has no sibling cove checkout, so the Cove contracts resolve from NuGet. The flags are
+      # explicit rather than relying on the auto-detection, so a cached checkout cannot change it.
+      - name: Restore
+        run: dotnet restore ${{ env.EXTENSION_PROJECT }} -p:UseLocalCoveSource=false -p:UseLocalCoveCore=false
+
+      - name: Build
+        run: dotnet build ${{ env.EXTENSION_PROJECT }} -c Release --no-restore -p:UseLocalCoveSource=false -p:UseLocalCoveCore=false
+
+      # The test project references the local Cove source, so it only runs where that checkout
+      # exists. Skipped rather than failed when it does not.
+      - name: Test
+        shell: bash
+        run: |
+          if [ -d ../cove/src/Cove.Data ]; then
+            dotnet test ${{ env.TEST_PROJECT }} --nologo
+          else
+            echo "No sibling cove checkout; skipping tests that compile against it."
+          fi
+
+      - name: Publish
+        run: dotnet publish ${{ env.EXTENSION_PROJECT }} -c Release -o artifacts/extension --no-build -p:UseLocalCoveSource=false -p:UseLocalCoveCore=false
+
+      - name: Copy manifest
+        run: cp src/EmpPrep/extension.json artifacts/extension/
+
+      # A host assembly in the package would split type identity inside the extension's load
+      # context at runtime. The build strips them; this asserts the strip actually happened.
+      - name: Assert host assemblies are not packaged
+        shell: bash
+        run: |
+          for assembly in Cove.Core Cove.Data Cove.Plugins Cove.Sdk Npgsql Pgvector; do
+            if [ -f "artifacts/extension/$assembly.dll" ]; then
+              echo "::error::$assembly.dll must not ship in the extension package."
+              exit 1
+            fi
+          done
+          echo "No host-provided assemblies in the package."
+
+      - name: Package
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          cd artifacts/extension
+          zip -r ../../${{ env.EXTENSION_ID }}-${{ steps.version.outputs.value }}.zip .
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v3
+        with:
+          files: '${{ env.EXTENSION_ID }}-*.zip'
+          generate_release_notes: true

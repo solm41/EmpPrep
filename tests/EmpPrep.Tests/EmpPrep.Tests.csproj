@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>EmpPrep.Tests</AssemblyName>
+    <RootNamespace>EmpPrep.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <!-- A real relational provider for persistence tests; the extension itself runs on the host's PostgreSQL. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\EmpPrep\EmpPrep.csproj" />
+    <ProjectReference Include="..\..\..\cove\src\Cove.Data\Cove.Data.csproj" />
+    <ProjectReference Include="..\..\..\cove\src\Cove.Sdk\Cove.Sdk.csproj" />
+  </ItemGroup>
+</Project>

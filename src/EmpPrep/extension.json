@@ -10,7 +10,7 @@
     "tools",
     "export"
   ],
-  "minCoveVersion": "1.4.1",
+  "minCoveVersion": "1.6.1",
   "entryDll": "EmpPrep.dll",
   "jsBundle": "dist/bundle.js",
   "cssBundle": "dist/bundle.css",

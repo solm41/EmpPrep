@@ -72,7 +72,7 @@ public sealed class EmpPrepExtension : FullExtensionBase
         services.AddSingleton<HamsterImgUploader>();
         services.AddHttpClient();
 
-        // Scoped: these take CoveContext, so they share the request's (or job scope's) unit of work.
+        // Scoped: these take the host DbContext, so they share the request's (or job scope's) unit of work.
         services.AddScoped<MetadataBuilder>();
         services.AddScoped<EmpPrepService>();
     }

@@ -39,19 +39,10 @@
   </ItemGroup>
 
   <!--
-    Cove.Data as well: this extension owns tables inside Cove's own PostgreSQL database, so it
-    compiles against CoveContext and passes host entity types across the boundary. That makes it a
-    host contract on exactly the same terms as Cove.Sdk and Cove.Core — compile-only, never shipped.
+    No Cove.Data reference: it is not a published package. The extension takes the host's
+    DbContext (registered by the host as CoveContext) and uses Set<T>() for both its own and
+    host entities, so Cove.Sdk + Cove.Core are the whole compile-time contract.
   -->
-  <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)\extension.json') and '$(UseLocalCoveCore)' == 'true'">
-    <ProjectReference Include="$(MSBuildThisFileDirectory)..\cove\src\Cove.Data\Cove.Data.csproj">
-      <Private>false</Private>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)\extension.json') and '$(UseLocalCoveCore)' != 'true'">
-    <PackageReference Include="Cove.Data" Version="$(CoveCoreVersion)" />
-  </ItemGroup>
 
   <!-- Assemblies the Cove host provides at runtime — see note above. Semicolon-delimited with leading/
        trailing ';' so membership is a substring test. Mirrors Cove.Sdk's buildTransitive list. -->

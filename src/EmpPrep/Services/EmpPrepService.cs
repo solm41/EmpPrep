@@ -1,7 +1,7 @@
 using System.Text.Json;
 
+using Cove.Core.Entities;
 using Cove.Core.Interfaces;
-using Cove.Data;
 
 using EmpPrep.Data;
 using EmpPrep.Models;
@@ -38,7 +38,7 @@ public sealed record ItemOverrides(string? Title, string? Tags, string? Descript
 /// and therefore have no principal to read.
 /// </remarks>
 public sealed class EmpPrepService(
-    CoveContext db,
+    DbContext db,
     MetadataBuilder metadata,
     ScreenshotService screenshots,
     SpriteReader sprites,
@@ -135,7 +135,7 @@ public sealed class EmpPrepService(
 
         // Only queue ids that actually exist: a stale selection would otherwise fail on the
         // foreign key with an error that says nothing useful.
-        var known = await db.Videos
+        var known = await db.Set<Video>()
             .AsNoTracking()
             .Where(video => distinctIds.Contains(video.Id))
             .Select(video => video.Id)
@@ -194,7 +194,7 @@ public sealed class EmpPrepService(
         if (videoIds.Count != 1)
             return $"Pack of {videoIds.Count} videos";
 
-        var title = await db.Videos.AsNoTracking()
+        var title = await db.Set<Video>().AsNoTracking()
             .Where(video => video.Id == videoIds[0])
             .Select(video => video.Title)
             .SingleOrDefaultAsync(ct);

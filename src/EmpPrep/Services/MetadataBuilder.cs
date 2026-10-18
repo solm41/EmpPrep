@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.Json;
 
 using Cove.Core.Entities;
-using Cove.Data;
 
 using EmpPrep.Models;
 
@@ -15,7 +14,7 @@ namespace EmpPrep.Services;
 /// Pulls a video's metadata out of the Cove library and renders the release name, media-info block
 /// and BBCode description from the configured templates.
 /// </summary>
-public sealed class MetadataBuilder(CoveContext db, SpriteReader sprites, FfmpegLocator ffmpeg, MediaProbeCache probes)
+public sealed class MetadataBuilder(DbContext db, SpriteReader sprites, FfmpegLocator ffmpeg, MediaProbeCache probes)
 {
     /// <summary>
     /// Read everything the prep workflow needs about one video, probing its audio if that has not
@@ -47,7 +46,7 @@ public sealed class MetadataBuilder(CoveContext db, SpriteReader sprites, Ffmpeg
             return new Dictionary<int, PrepMetadata>();
 
         // Split query: four collections joined in one statement would multiply rows per video.
-        var videos = await db.Videos
+        var videos = await db.Set<Video>()
             .AsNoTracking()
             .AsSplitQuery()
             .Include(candidate => candidate.Studio).ThenInclude(studio => studio!.Urls)
@@ -57,7 +56,7 @@ public sealed class MetadataBuilder(CoveContext db, SpriteReader sprites, Ffmpeg
             .Where(candidate => ids.Contains(candidate.Id))
             .ToListAsync(ct);
 
-        var files = await db.VideoFiles
+        var files = await db.Set<VideoFile>()
             .AsNoTracking()
             .Where(file => file.VideoId != null && ids.Contains(file.VideoId.Value))
             .ToListAsync(ct);
@@ -165,11 +164,11 @@ public sealed class MetadataBuilder(CoveContext db, SpriteReader sprites, Ffmpeg
     /// <summary>The file the torrent would describe for a video, or null when it has none.</summary>
     public async Task<VideoFile?> ResolvePrimaryFileAsync(int videoId, CancellationToken ct = default)
     {
-        var primaryFileId = await db.Videos.AsNoTracking()
+        var primaryFileId = await db.Set<Video>().AsNoTracking()
             .Where(candidate => candidate.Id == videoId)
             .Select(candidate => candidate.PrimaryFileId)
             .SingleOrDefaultAsync(ct);
-        var files = await db.VideoFiles.AsNoTracking().Where(file => file.VideoId == videoId).ToListAsync(ct);
+        var files = await db.Set<VideoFile>().AsNoTracking().Where(file => file.VideoId == videoId).ToListAsync(ct);
         return files.FirstOrDefault(file => file.Id == primaryFileId) ?? files.OrderByDescending(file => file.Size).FirstOrDefault();
     }
 
